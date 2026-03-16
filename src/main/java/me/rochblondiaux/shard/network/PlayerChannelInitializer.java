@@ -8,7 +8,6 @@ import com.github.retrooper.packetevents.protocol.player.UserProfile;
 
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import me.rochblondiaux.shard.entity.Player;
 import me.rochblondiaux.shard.network.handler.PacketDecoder;
@@ -20,10 +19,10 @@ import me.rochblondiaux.shard.server.ProtocolManager;
 public class PlayerChannelInitializer extends ChannelInitializer<SocketChannel> {
 
     @Override
-    protected void initChannel(SocketChannel socketChannel) throws Exception {
+    protected void initChannel(SocketChannel channel) throws Exception {
         // Create & register user
-        User user = new User(socketChannel, ConnectionState.HANDSHAKING, ClientVersion.UNKNOWN, new UserProfile(null, null));
-        ProtocolManager.USERS.put(socketChannel, user);
+        User user = new User(channel, ConnectionState.HANDSHAKING, ClientVersion.UNKNOWN, new UserProfile(null, null));
+        ProtocolManager.USERS.put(channel, user);
 
         // Create player
         Player player = new Player(user);
@@ -32,8 +31,8 @@ public class PlayerChannelInitializer extends ChannelInitializer<SocketChannel> 
         PacketDecoder decoder = new PacketDecoder(user, player);
         PacketEncoder encoder = new PacketEncoder(user, player);
 
-        ChannelPipeline pipeline = socketChannel.pipeline();
-        pipeline.addLast("decryption_handler", new ChannelHandlerAdapter() {
+        channel.pipeline()
+                .addLast("decryption_handler", new ChannelHandlerAdapter() {
                 })
                 .addLast("packet_splitter", new PacketSplitter())
                 .addLast(PacketEvents.DECODER_NAME, decoder)

@@ -10,11 +10,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.spongepowered.configurate.CommentedConfigurationNode;
+import org.spongepowered.configurate.ConfigurationOptions;
 import org.spongepowered.configurate.serialize.SerializationException;
+import org.spongepowered.configurate.serialize.TypeSerializerCollection;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.PacketEventsAPI;
+import com.github.retrooper.packetevents.event.PacketListenerPriority;
 import com.github.retrooper.packetevents.manager.server.ServerVersion;
 
 import io.github.retrooper.packetevents.impl.netty.BuildData;
@@ -22,11 +25,14 @@ import io.github.retrooper.packetevents.impl.netty.factory.NettyPacketEventsBuil
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import me.rochblondiaux.shard.configuration.ServerConfiguration;
+import me.rochblondiaux.shard.configuration.serializer.ComponentTypeSerializer;
+import me.rochblondiaux.shard.listener.ServerListPingListener;
 import me.rochblondiaux.shard.network.ChannelInjectorImpl;
 import me.rochblondiaux.shard.server.PlayerManager;
 import me.rochblondiaux.shard.server.ProtocolManager;
 import me.rochblondiaux.shard.server.ServerManager;
 import me.rochblondiaux.shard.server.ShardServer;
+import net.kyori.adventure.text.Component;
 
 @Slf4j(topic = "Shard")
 @Getter
@@ -81,8 +87,14 @@ public class Shard {
         }
 
         // Load configuration
+        TypeSerializerCollection serializers = TypeSerializerCollection.builder()
+                .register(Component.class, ComponentTypeSerializer.INSTANCE)
+                .registerAll(ConfigurationOptions.defaults().serializers())
+                .build();
+
         YamlConfigurationLoader loader = YamlConfigurationLoader.builder()
                 .path(path)
+                .defaultOptions(configurationOptions -> configurationOptions.serializers(serializers))
                 .build();
 
         CommentedConfigurationNode root;
@@ -119,6 +131,8 @@ public class Shard {
         PacketEventsAPI<?> api = PacketEvents.getAPI();
         api.getSettings().debug(true);
         api.load();
+        api.getEventManager().registerListener(new ServerListPingListener(this), PacketListenerPriority.NORMAL);
+
         // TODO: Register listeners
         api.init();
 

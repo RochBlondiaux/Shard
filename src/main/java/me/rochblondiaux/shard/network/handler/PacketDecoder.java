@@ -11,7 +11,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import me.rochblondiaux.shard.entity.Player;
 
-public class PacketDecoder  extends MessageToMessageDecoder<ByteBuf> {
+public class PacketDecoder extends MessageToMessageDecoder<ByteBuf> {
 
     public User user;
     public final Player player;
